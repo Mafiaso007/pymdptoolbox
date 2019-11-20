@@ -1022,8 +1022,8 @@ class QLearning(MDP):
 
     """
 
-    def __init__(self, transitions, reward, discount, n_iter=10000,
-                 skip_check=False):
+    def __init__(self, transitions, reward, discount, epsilon, min_epsilon=0.001,
+                 n_iter=10000, skip_check=False):
         # Initialise a Q-learning MDP.
 
         # The following check won't be done in MDP()'s initialisation, so let's
@@ -1044,11 +1044,21 @@ class QLearning(MDP):
 
         self.discount = discount
 
+        # check that epsilon is something sane
+        if epsilon is not None:
+            self.epsilon = float(epsilon)
+            assert self.epsilon > 0, "Epsilon must be greater than 0."
+
+        # check that epsilon is something sane
+        if min_epsilon is not None:
+            self.min_epsilon = float(min_epsilon)
+            assert self.min_epsilon > 0, "Epsilon must be greater than 0."
+
         # Initialisations
         self.Q = _np.zeros((self.S, self.A))
         self.mean_discrepancy = []
 
-    def run(self):
+    def run(self, eps_greedy=False):
         # Run the Q-learning algoritm.
         discrepancy = []
 
@@ -1063,14 +1073,22 @@ class QLearning(MDP):
             if (n % 100) == 0:
                 s = _np.random.randint(0, self.S)
 
+            pn = _np.random.random()
+            # Action choice : epsilon greedy
+            if eps_greedy:
+                if pn > self.epsilon:
+                    # optimal_action = self.Q[s, :].max()
+                    a = self.Q[s, :].argmax()
+                else:
+                    a = _np.random.randint(0, self.A)
             # Action choice : greedy with increasing probability
             # probability 1-(1/log(n+2)) can be changed
-            pn = _np.random.random()
-            if pn < (1 - (1 / _math.log(n + 2))):
-                # optimal_action = self.Q[s, :].max()
-                a = self.Q[s, :].argmax()
             else:
-                a = _np.random.randint(0, self.A)
+                if pn < (1 - (1 / _math.log(n + 2))):
+                    # optimal_action = self.Q[s, :].max()
+                    a = self.Q[s, :].argmax()
+                else:
+                    a = _np.random.randint(0, self.A)
 
             # Simulating next state s_new and reward associated to <s,s_new,a>
             p_s_new = _np.random.random()
@@ -1108,6 +1126,10 @@ class QLearning(MDP):
             # compute the value function and the policy
             self.V = self.Q.max(axis=1)
             self.policy = self.Q.argmax(axis=1)
+
+            # compute epsilon decay
+            if eps_greedy:
+                self.epsilon = max((0.005 * self.epsilon), self.min_epsilon)
 
         self._endRun()
 
