@@ -1066,12 +1066,19 @@ class QLearning(MDP):
 
         # initial state choice
         s = _np.random.randint(0, self.S)
-
+        Qprev = self.Q.copy()
         for n in range(1, self.max_iter + 1):
-
             # Reinitialisation of trajectories every 100 transitions
             if (n % 100) == 0:
                 s = _np.random.randint(0, self.S)
+
+                # The values, based on Q. For the function "max()": the option
+                # "axis" means the axis along which to operate. In this case it
+                # finds the maximum of the the rows. (Operates along the columns?)
+                variation = _util.getSpan(self.Q - Qprev)
+                if self.verbose:
+                    _printVerbosity(self.iter, variation)
+                Qprev = self.Q.copy()
 
             pn = _np.random.random()
             # Action choice : epsilon greedy
