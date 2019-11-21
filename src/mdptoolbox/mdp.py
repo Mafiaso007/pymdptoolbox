@@ -1077,7 +1077,7 @@ class QLearning(MDP):
                 # finds the maximum of the the rows. (Operates along the columns?)
                 variation = _util.getSpan(self.Q - Qprev)
                 if self.verbose:
-                    _printVerbosity(self.iter, variation)
+                    _printVerbosity(n, variation)
                 Qprev = self.Q.copy()
 
             pn = _np.random.random()
