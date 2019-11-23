@@ -57,6 +57,7 @@ Available classes
 
 import math as _math
 import time as _time
+from collections import OrderedDict
 
 import numpy as _np
 import scipy.sparse as _sp
@@ -648,6 +649,8 @@ class PolicyIteration(MDP):
             self.policy = policy0
         # set the initial values to zero
         self.V = _np.zeros(self.S)
+        # set iteration dictonary
+        self.value_dict = OrderedDict()
         # Do some setup depending on the evaluation type
         if eval_type in (0, "matrix"):
             self.eval_type = "matrix"
@@ -817,6 +820,7 @@ class PolicyIteration(MDP):
             # calculate in how many places does the old policy disagree with
             # the new policy
             n_different = (policy_next != self.policy).sum()
+            self.value_dict[str(self.iter)] = n_different
             # if verbose then continue printing a table
             if self.verbose:
                 _printVerbosity(self.iter, n_different)
@@ -1057,6 +1061,8 @@ class QLearning(MDP):
         # Initialisations
         self.Q = _np.zeros((self.S, self.A))
         self.mean_discrepancy = []
+        # set iteration dictonary
+        self.value_dict = OrderedDict()
 
     def run(self, eps_greedy=False):
         # Run the Q-learning algoritm.
@@ -1076,6 +1082,7 @@ class QLearning(MDP):
                 # "axis" means the axis along which to operate. In this case it
                 # finds the maximum of the the rows. (Operates along the columns?)
                 variation = _util.getSpan(self.Q - Qprev)
+                self.value_dict[str(n)] = variation
                 if self.verbose:
                     _printVerbosity(n, variation)
                 Qprev = self.Q.copy()
@@ -1382,7 +1389,8 @@ class ValueIteration(MDP):
 
         MDP.__init__(self, transitions, reward, discount, epsilon, max_iter,
                      skip_check=skip_check)
-
+        # set iteration dictonary
+        self.value_dict = OrderedDict()
         # initialization of optional arguments
         if initial_value == 0:
             self.V = _np.zeros(self.S)
@@ -1463,7 +1471,7 @@ class ValueIteration(MDP):
             # "axis" means the axis along which to operate. In this case it
             # finds the maximum of the the rows. (Operates along the columns?)
             variation = _util.getSpan(self.V - Vprev)
-
+            self.value_dict[str(self.iter)] = variation
             if self.verbose:
                 _printVerbosity(self.iter, variation)
 
